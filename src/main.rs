@@ -1,3 +1,22 @@
+use std::io;
+
+use tokens::tokenize;
+
+pub mod tokens;
+
 fn main() {
-    println!("Hello, world!");
+
+    let stdin = io::stdin();
+
+    loop {
+        let mut buffer = String::new();
+        stdin.read_line(&mut buffer).unwrap();
+        
+        let tokens = tokenize(&buffer.trim());
+
+        match tokens {
+            Ok(t) => println!("{:?}", t),
+            Err(e) => println!("{}", e),
+        };
+    }
 }
