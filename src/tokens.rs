@@ -1,4 +1,4 @@
-use std::{fmt::{write, Display}, str::Chars};
+use std::{fmt::Display, str::Chars};
 use core::iter::Peekable;
 
 macro_rules! symbols {
@@ -66,12 +66,12 @@ impl Display for Token {
 }
 
 
-pub trait Lexer<'a> {
+trait Lexer<'a> {
     fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, InvalidTokenError>;
 }
 
 
-pub struct SymbolLexer;
+struct SymbolLexer;
 
 impl <'a> Lexer<'a> for SymbolLexer {
     fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, InvalidTokenError> {
@@ -90,6 +90,71 @@ impl <'a> Lexer<'a> for SymbolLexer {
 }
 
 
+struct NumberLexer;
+
+impl <'a> Lexer<'a> for NumberLexer {
+    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, InvalidTokenError> {
+        if chars.peek().is_none() {
+            return  Err(InvalidTokenError(String::from("Emtpy token")));
+        }
+        
+        let mut buffer = String::new();
+        let mut has_dot = false;
+        
+        while let Some(c) = chars.peek() {
+            match c {
+                digits!() => {
+                    buffer.push(c.clone());
+                    chars.next();
+                },
+                '.' => {
+                    if has_dot {
+                        return Ok(Token::Constant(buffer.parse().unwrap()))
+                    }
+                    else {
+                        buffer.push(c.clone());
+                        has_dot = true;
+                        chars.next();
+                    }
+                },
+                _ => {
+                    return Ok(Token::Constant(buffer.parse().unwrap()))
+                },
+            };
+        }
+
+        Ok(Token::Constant(buffer.parse().unwrap()))
+    }
+}
+
+
+struct NameLexer;
+
+impl <'a> Lexer<'a> for NameLexer {
+    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, InvalidTokenError> {
+        if chars.peek().is_none() {
+            return Err(InvalidTokenError(String::from("Empty token")));
+        }
+        
+        let mut buffer = String::new();
+        
+        while let Some(c) = chars.peek() {
+            match c {
+                letters!() => {
+                    buffer.push(c.clone());
+                    chars.next();
+                }
+                _ =>{
+                    return Ok(Token::Name(buffer));
+                }
+            }
+        };
+
+        Ok(Token::Name(buffer))
+    }
+}
+
+
 pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, InvalidTokenError> {
     let mut chars = s.chars().peekable();
     let mut tokens = Vec::new();
@@ -98,6 +163,8 @@ pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, InvalidTokenError> {
     while let Some(c) = chars.peek() {
         let t = match c {
             symbols!() => SymbolLexer.read_token(&mut chars),
+            digits!() => NumberLexer.read_token(&mut chars),
+            letters!() => NameLexer.read_token(&mut chars),
             _ => Err(InvalidTokenError(String::from(c.clone()))),
         };
 
