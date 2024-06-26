@@ -28,9 +28,9 @@ macro_rules! letters {
 
 
 #[derive(Debug)]
-pub struct InvalidTokenError(String);
+pub struct TokenError(String);
 
-impl Display for InvalidTokenError {
+impl Display for TokenError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Invalid token error: {}", self.0)
     }
@@ -67,15 +67,15 @@ impl Display for Token {
 
 
 trait Lexer<'a> {
-    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, InvalidTokenError>;
+    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, TokenError>;
 }
 
 
 struct SymbolLexer;
 
 impl <'a> Lexer<'a> for SymbolLexer {
-    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, InvalidTokenError> {
-        let c = chars.next().ok_or(InvalidTokenError(String::from("Empty token")))?;
+    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, TokenError> {
+        let c = chars.next().ok_or(TokenError(String::from("Empty token")))?;
         
         match c {
             '+' => Ok(Token::Add),
@@ -84,7 +84,7 @@ impl <'a> Lexer<'a> for SymbolLexer {
             '/' => Ok(Token::Div),
             '(' => Ok(Token::LBracket),
             ')' => Ok(Token::RBracket),
-            _ => Err(InvalidTokenError(String::from(c)))
+            _ => Err(TokenError(String::from(c)))
         }
     }
 }
@@ -93,9 +93,9 @@ impl <'a> Lexer<'a> for SymbolLexer {
 struct NumberLexer;
 
 impl <'a> Lexer<'a> for NumberLexer {
-    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, InvalidTokenError> {
+    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, TokenError> {
         if chars.peek().is_none() {
-            return  Err(InvalidTokenError(String::from("Emtpy token")));
+            return  Err(TokenError(String::from("Emtpy token")));
         }
         
         let mut buffer = String::new();
@@ -131,9 +131,9 @@ impl <'a> Lexer<'a> for NumberLexer {
 struct NameLexer;
 
 impl <'a> Lexer<'a> for NameLexer {
-    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, InvalidTokenError> {
+    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, TokenError> {
         if chars.peek().is_none() {
-            return Err(InvalidTokenError(String::from("Empty token")));
+            return Err(TokenError(String::from("Empty token")));
         }
         
         let mut buffer = String::new();
@@ -155,7 +155,7 @@ impl <'a> Lexer<'a> for NameLexer {
 }
 
 
-pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, InvalidTokenError> {
+pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, TokenError> {
     let mut chars = s.chars().peekable();
     let mut tokens = Vec::new();
 
@@ -165,7 +165,7 @@ pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, InvalidTokenError> {
             symbols!() => SymbolLexer.read_token(&mut chars),
             digits!() => NumberLexer.read_token(&mut chars),
             letters!() => NameLexer.read_token(&mut chars),
-            _ => Err(InvalidTokenError(String::from(c.clone()))),
+            _ => Err(TokenError(String::from(c.clone()))),
         };
 
         match t {

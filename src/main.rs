@@ -3,6 +3,7 @@ use std::io;
 use tokens::tokenize;
 
 pub mod tokens;
+pub mod parser;
 
 fn main() {
 
