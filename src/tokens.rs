@@ -32,7 +32,7 @@ pub struct TokenError(String);
 
 impl Display for TokenError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Invalid token error: {}", self.0)
+        write!(f, "Token error: {}", self.0)
     }
 }
 

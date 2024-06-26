@@ -12,6 +12,7 @@ fn main() {
     loop {
         let mut buffer = String::new();
         stdin.read_line(&mut buffer).unwrap();
+        let buffer = buffer.replace(" ", "");
         
         let tokens = tokenize(&buffer.trim());
 
