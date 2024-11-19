@@ -27,24 +27,18 @@ macro_rules! letters {
 }
 
 
-#[derive(Debug)]
-pub struct TokenError(String);
-
-impl Display for TokenError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Token error: {}", self.0)
-    }
-}
-
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     Constant(f32),
     Name(String),
+    Var(String),
+    Func(String),
     Add,
     Sub,
+    Neg,
     Mul,
     Div,
+    Inv,
     LBracket,
     RBracket,
 }
@@ -54,28 +48,48 @@ impl Display for Token {
         match self {
             Self::Constant(x) => write!(f, "Constant({})", x),
             Self::Name(s) => write!(f, "Name({})", s),
+            Self::Var(s) => write!(f, "Var({})", s),
+            Self::Func(s) => write!(f, "Func({})", s),
             Self::Add => write!(f, "Add"),
             Self::Sub => write!(f, "Sub"),
+            Self::Neg => write!(f, "Neg"),
             Self::Mul => write!(f, "Mul"),
             Self::Div => write!(f, "Div"),
+            Self::Inv => write!(f, "Inv"),
             Self::LBracket => write!(f, "LBracket"),
             Self::RBracket => write!(f, "RBracket"),
-
         }
     }
 }
 
 
+#[derive(Debug)]
+pub enum TokenizerError {
+    EmptyToken,
+    IncorrectCharacter(String),
+}
+
+impl Display for TokenizerError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let message = match self {
+            Self::EmptyToken => String::from("Empty token"),
+            Self::IncorrectCharacter(c) => String::from("Incorrect character: ") + c,  
+        };
+        write!(f, "TokenizerError -> {}", message)
+    }
+}
+
+
 trait Lexer<'a> {
-    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, TokenError>;
+    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, TokenizerError>;
 }
 
 
 struct SymbolLexer;
 
 impl <'a> Lexer<'a> for SymbolLexer {
-    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, TokenError> {
-        let c = chars.next().ok_or(TokenError(String::from("Empty token")))?;
+    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, TokenizerError> {
+        let c = chars.next().ok_or(TokenizerError::EmptyToken)?;
         
         match c {
             '+' => Ok(Token::Add),
@@ -84,7 +98,7 @@ impl <'a> Lexer<'a> for SymbolLexer {
             '/' => Ok(Token::Div),
             '(' => Ok(Token::LBracket),
             ')' => Ok(Token::RBracket),
-            _ => Err(TokenError(String::from(c)))
+            _ => Err(TokenizerError::IncorrectCharacter(String::from(c)))
         }
     }
 }
@@ -93,9 +107,9 @@ impl <'a> Lexer<'a> for SymbolLexer {
 struct NumberLexer;
 
 impl <'a> Lexer<'a> for NumberLexer {
-    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, TokenError> {
+    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, TokenizerError> {
         if chars.peek().is_none() {
-            return  Err(TokenError(String::from("Emtpy token")));
+            return  Err(TokenizerError::EmptyToken);
         }
         
         let mut buffer = String::new();
@@ -131,9 +145,9 @@ impl <'a> Lexer<'a> for NumberLexer {
 struct NameLexer;
 
 impl <'a> Lexer<'a> for NameLexer {
-    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, TokenError> {
+    fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, TokenizerError> {
         if chars.peek().is_none() {
-            return Err(TokenError(String::from("Empty token")));
+            return Err(TokenizerError::EmptyToken);
         }
         
         let mut buffer = String::new();
@@ -155,7 +169,7 @@ impl <'a> Lexer<'a> for NameLexer {
 }
 
 
-pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, TokenError> {
+pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, TokenizerError> {
     let mut chars = s.chars().peekable();
     let mut tokens = Vec::new();
 
@@ -165,7 +179,7 @@ pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, TokenError> {
             symbols!() => SymbolLexer.read_token(&mut chars),
             digits!() => NumberLexer.read_token(&mut chars),
             letters!() => NameLexer.read_token(&mut chars),
-            _ => Err(TokenError(String::from(c.clone()))),
+            _ => Err(TokenizerError::IncorrectCharacter(String::from(c.clone()))),
         };
 
         match t {

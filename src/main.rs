@@ -4,6 +4,7 @@ use tokens::tokenize;
 
 pub mod tokens;
 pub mod parser;
+pub mod evaluator;
 
 fn main() {
 
@@ -12,7 +13,7 @@ fn main() {
     loop {
         let mut buffer = String::new();
         stdin.read_line(&mut buffer).unwrap();
-        let buffer = buffer.replace(" ", "");
+        let buffer = buffer.replace(" ", "").to_lowercase();
         
         let tokens = tokenize(&buffer.trim());
 
