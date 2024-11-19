@@ -1,8 +1,8 @@
 use std::io;
-
-use tokens::tokenize;
+use tokenizer::tokenize;
 
 pub mod tokens;
+pub mod tokenizer;
 pub mod parser;
 pub mod evaluator;
 
