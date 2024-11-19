@@ -143,6 +143,7 @@ pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, TokenizerError> {
             symbols!() => SymbolLexer.read_token(&mut chars),
             digits!() => NumberLexer.read_token(&mut chars),
             letters!() => NameLexer.read_token(&mut chars),
+            ' ' => {chars.next(); continue;},
             _ => Err(TokenizerError::IncorrectCharacter(String::from(c.clone()))),
         };
 
