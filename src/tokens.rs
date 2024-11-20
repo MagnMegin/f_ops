@@ -12,7 +12,7 @@ pub enum Token {
     Neg,
     Mul,
     Div,
-    Inv,
+    Pow,
     LBracket,
     RBracket,
 }
@@ -29,7 +29,7 @@ impl Display for Token {
             Self::Neg => write!(f, "Neg"),
             Self::Mul => write!(f, "Mul"),
             Self::Div => write!(f, "Div"),
-            Self::Inv => write!(f, "Inv"),
+            Self::Pow => write!(f, "Pow"),
             Self::LBracket => write!(f, "LBracket"),
             Self::RBracket => write!(f, "RBracket"),
         }

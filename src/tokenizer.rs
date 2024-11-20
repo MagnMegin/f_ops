@@ -4,8 +4,8 @@ use crate::tokens::Token;
 
 macro_rules! symbols {
     () => {
-        '+' | '-' | '*' | '/' | '(' |
-        ')'
+        '+' | '-' | '*' | '/' | '^' |
+        '(' | ')'
     };
 }
 
@@ -62,6 +62,7 @@ impl <'a> Lexer<'a> for SymbolLexer {
             '/' => Ok(Token::Div),
             '(' => Ok(Token::LBracket),
             ')' => Ok(Token::RBracket),
+            '^' => Ok(Token::Pow),
             _ => Err(TokenizerError::IncorrectCharacter(String::from(c)))
         }
     }

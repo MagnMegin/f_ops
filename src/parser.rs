@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Add, process::Output};
+use std::fmt::Display;
 use crate::tokens::Token;
 
 
@@ -10,6 +10,7 @@ impl Display for ParserError {
         write!(f, "Parser error: {}", self.0)
     }
 }
+
 
 fn validate_brackets(tokens: &Vec<Token>) -> bool {
     let mut l_bracket_count = 0;
@@ -53,7 +54,7 @@ fn convert_unary_sub(tokens: &mut Vec<Token>) {
         if t == &Token::Sub {
             if let Some(t_prev) = tokens.get(index - 1) {
                 match t_prev {
-                    Token::Add | Token::Sub | Token::Mul | Token::Div => tokens[index] = Token::Neg,
+                    Token::Add | Token::Sub | Token::Mul | Token::Div | Token::Pow => tokens[index] = Token::Neg,
                     _ => (),
                 }
             }
@@ -65,6 +66,7 @@ fn convert_unary_sub(tokens: &mut Vec<Token>) {
         index += 1;
     }    
 }
+
 
 fn to_postfix(tokens: Vec<Token>) -> Vec<Token> {
     todo!()
