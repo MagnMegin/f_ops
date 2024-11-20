@@ -107,9 +107,9 @@ impl <'a> Lexer<'a> for NumberLexer {
 }
 
 
-struct NameLexer;
+struct CharacterLexer;
 
-impl <'a> Lexer<'a> for NameLexer {
+impl <'a> Lexer<'a> for CharacterLexer {
     fn read_token(self, chars: &mut Peekable<Chars<'a>>) -> Result<Token, TokenizerError> {
         if chars.peek().is_none() {
             return Err(TokenizerError::EmptyToken);
@@ -123,13 +123,12 @@ impl <'a> Lexer<'a> for NameLexer {
                     buffer.push(c.clone());
                     chars.next();
                 }
-                _ =>{
-                    return Ok(Token::Name(buffer));
-                }
+                '(' => return Ok(Token::Func(buffer)),
+                _ => return Ok(Token::Var(buffer)),
             }
         };
 
-        Ok(Token::Name(buffer))
+        Ok(Token::Var(buffer))
     }
 }
 
@@ -143,7 +142,7 @@ pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, TokenizerError> {
         let t = match c {
             symbols!() => SymbolLexer.read_token(&mut chars),
             digits!() => NumberLexer.read_token(&mut chars),
-            letters!() => NameLexer.read_token(&mut chars),
+            letters!() => CharacterLexer.read_token(&mut chars),
             ' ' => {chars.next(); continue;},
             _ => Err(TokenizerError::IncorrectCharacter(String::from(c.clone()))),
         };
