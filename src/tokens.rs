@@ -1,5 +1,11 @@
 use std::fmt::Display;
 
+/// Shortcut for creating tokens. Is not constant.
+#[allow(non_snake_case)]
+pub fn TOKEN(sub_token: impl Into<Token>) -> Token {
+    sub_token.into()
+}
+
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
@@ -47,6 +53,12 @@ impl Display for Function {
     }
 }
 
+impl Into<Token> for Function {
+    fn into(self) -> Token {
+        Token::Func(self)
+    }
+}
+
 impl Function {
     pub const fn presedence(&self) -> i32 {
         match self {
@@ -77,6 +89,12 @@ impl Display for Value {
     }
 }
 
+impl Into<Token> for Value {
+    fn into(self) -> Token {
+        Token::Val(self)
+    }
+}
+
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Glyph {
@@ -92,5 +110,11 @@ impl Display for Glyph {
             Self::RBracket => write!(f, "RBracket"),
             Self::Comma => write!(f, "Comma"),
         }
+    }
+}
+
+impl Into<Token> for Glyph {
+    fn into(self) -> Token {
+        Token::Glyph(self)
     }
 }

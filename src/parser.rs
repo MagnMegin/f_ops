@@ -12,28 +12,6 @@ impl Display for ParserError {
 }
 
 
-// Converts Sub token to Neg token if Sub represents a unary "-" operator
-// (e.g. 1 * -1) "-" is unary in this context
-// fn convert_unary_sub(tokens: &mut Vec<Token>) {
-//     let mut index = 0;
-    
-//     while let Some(t) = tokens.get(index) {
-//         if t == &Token::Sub {
-//             if let Some(t_prev) = tokens.get(index - 1) {
-//                 match t_prev {
-//                     Token::Add | Token::Sub | Token::Mul | Token::Div | Token::Pow => tokens[index] = Token::Neg,
-//                     _ => (),
-//                 }
-//             }
-//             else {
-//                 tokens[index] = Token::Neg;
-//             }
-//         }
-
-//         index += 1;
-//     }    
-// }
-
 fn validate_brackets(tokens: &Vec<Token>) -> bool {
     let mut l_bracket_count = 0;
     let mut r_bracket_count = 0;
