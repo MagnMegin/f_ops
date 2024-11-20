@@ -1,6 +1,5 @@
 use std::io;
 use tokenizer::tokenize;
-use evaluator::evaluate;
 
 pub mod tokens;
 pub mod tokenizer;
@@ -19,12 +18,7 @@ fn main() {
         let tokens = tokenize(&buffer.trim());
 
         match tokens {
-            Ok(t) => {
-                match evaluate(t) {
-                    Ok(x) => println!("{:?}", x),
-                    Err(e) => println!("{:?}", e),
-                }
-            },
+            Ok(t) => println!("{:?}", t),
             Err(e) => println!("{}", e),
         };
     }
