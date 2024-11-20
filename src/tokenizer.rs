@@ -87,7 +87,7 @@ impl <'a> Lexer<'a> for NumberLexer {
                 },
                 '.' => {
                     if has_dot {
-                        return Ok(Token::Constant(buffer.parse().unwrap()))
+                        return Ok(Token::Const(buffer.parse().unwrap()))
                     }
                     else {
                         buffer.push(c.clone());
@@ -96,12 +96,12 @@ impl <'a> Lexer<'a> for NumberLexer {
                     }
                 },
                 _ => {
-                    return Ok(Token::Constant(buffer.parse().unwrap()))
+                    return Ok(Token::Const(buffer.parse().unwrap()))
                 },
             };
         }
 
-        Ok(Token::Constant(buffer.parse().unwrap()))
+        Ok(Token::Const(buffer.parse().unwrap()))
     }
 }
 

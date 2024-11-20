@@ -12,7 +12,7 @@ pub fn evaluate(postfix_tokens: Vec<Token>) -> Result<f32, EvalError> {
 
     for token in postfix_tokens {
         match token {
-            Token::Constant(x) => eval_stack.push(x),
+            Token::Const(x) => eval_stack.push(x),
             Token::Add => {
                 let n1 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                 let n2 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
