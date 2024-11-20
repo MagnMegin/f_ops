@@ -1,6 +1,6 @@
 use std::{fmt::Display, str::Chars};
 use core::iter::Peekable;
-use crate::tokens::Token;
+use crate::tokens::{Token, Function, Value, Glyph};
 
 macro_rules! symbols {
     () => {
@@ -56,13 +56,14 @@ impl <'a> Lexer<'a> for SymbolLexer {
         let c = chars.next().ok_or(TokenizerError::EmptyToken)?;
         
         match c {
-            '+' => Ok(Token::Add),
-            '-' => Ok(Token::Sub),
-            '*' => Ok(Token::Mul),
-            '/' => Ok(Token::Div),
-            '(' => Ok(Token::LBracket),
-            ')' => Ok(Token::RBracket),
-            '^' => Ok(Token::Pow),
+            '+' => Ok(Token::Func(Function::Add)),
+            '-' => Ok(Token::Func(Function::Sub)),
+            '*' => Ok(Token::Func(Function::Mul)),
+            '/' => Ok(Token::Func(Function::Div)),
+            '^' => Ok(Token::Func(Function::Pow)),
+            '(' => Ok(Token::Glyph(Glyph::LBracket)),
+            ')' => Ok(Token::Glyph(Glyph::RBracket)),
+            ',' => Ok(Token::Glyph(Glyph::Comma)),
             _ => Err(TokenizerError::IncorrectCharacter(String::from(c)))
         }
     }
@@ -88,7 +89,7 @@ impl <'a> Lexer<'a> for NumberLexer {
                 },
                 '.' => {
                     if has_dot {
-                        return Ok(Token::Const(buffer.parse().unwrap()))
+                        return Ok(Token::Val(Value::Const(buffer.parse().unwrap())))
                     }
                     else {
                         buffer.push(c.clone());
@@ -97,12 +98,12 @@ impl <'a> Lexer<'a> for NumberLexer {
                     }
                 },
                 _ => {
-                    return Ok(Token::Const(buffer.parse().unwrap()))
+                    return Ok(Token::Val(Value::Const(buffer.parse().unwrap())))
                 },
             };
         }
 
-        Ok(Token::Const(buffer.parse().unwrap()))
+        Ok(Token::Val(Value::Const(buffer.parse().unwrap())))
     }
 }
 
@@ -123,12 +124,12 @@ impl <'a> Lexer<'a> for CharacterLexer {
                     buffer.push(c.clone());
                     chars.next();
                 }
-                '(' => return Ok(Token::Func(buffer)),
-                _ => return Ok(Token::Var(buffer)),
+                '(' => return Ok(Token::Func(Function::NamedFunc(buffer))),
+                _ => return Ok(Token::Val(Value::Var(buffer))),
             }
         };
 
-        Ok(Token::Var(buffer))
+        Ok(Token::Val(Value::Var(buffer)))
     }
 }
 

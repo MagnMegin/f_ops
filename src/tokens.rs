@@ -1,52 +1,19 @@
 use std::fmt::Display;
 
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
-    Const(f32),
-    Var(String),
-    Func(String),
-    Add,
-    Sub,
-    Neg,
-    Mul,
-    Div,
-    Pow,
-    LBracket,
-    RBracket,
+    Func(Function),
+    Val(Value),
+    Glyph(Glyph),
 }
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Const(x) => write!(f, "Constant({})", x),
-            Self::Var(s) => write!(f, "Var({})", s),
-            Self::Func(s) => write!(f, "Func({})", s),
-            Self::Add => write!(f, "Add"),
-            Self::Sub => write!(f, "Sub"),
-            Self::Neg => write!(f, "Neg"),
-            Self::Mul => write!(f, "Mul"),
-            Self::Div => write!(f, "Div"),
-            Self::Pow => write!(f, "Pow"),
-            Self::LBracket => write!(f, "LBracket"),
-            Self::RBracket => write!(f, "RBracket"),
-        }
-    }
-}
-
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum NewToken {
-    Function(Function),
-    Value(Value),
-    Symbol(Symbol),
-}
-
-impl Display for NewToken {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Function(function) => function.fmt(f),
-            Self::Value(value) => value.fmt(f),
-            Self::Symbol(symbol) => symbol.fmt(f),
+            Self::Func(function) => function.fmt(f),
+            Self::Val(value) => value.fmt(f),
+            Self::Glyph(glyph) => glyph.fmt(f),
         }
     }
 }
@@ -112,13 +79,13 @@ impl Display for Value {
 
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum Symbol {
+pub enum Glyph {
     LBracket,
     RBracket,
     Comma,
 }
 
-impl Display for Symbol {
+impl Display for Glyph {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::LBracket => write!(f, "LBracket"),
