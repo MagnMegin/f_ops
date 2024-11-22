@@ -194,6 +194,36 @@ pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, TokenizerError> {
     Ok(tokens)
 }
 
+pub fn tokenize_unpadded<'a>(s: &'a str) -> Result<Vec<Token>, TokenizerError> { 
+    let mut reader = LexingReader::new(s);
+    let mut tokens = Vec::with_capacity(s.len() + 2);
+
+    while let Some(c) = reader.current_char() {
+        let token: Token;
+        
+        if let symbols!() = c {
+            token = SymbolLexer.read_token(&mut reader)?;
+        }
+        else if c.is_numeric() {
+            token = NumberLexer.read_token(&mut reader)?;
+        }
+        else if c.is_alphabetic() {
+            token = CharacterLexer.read_token(&mut reader)?;
+        }
+        else if ' ' == c {
+            reader.advance();
+            continue;
+        }
+        else {
+            return Err(TokenizerError::IncorrectCharacter(String::from(c)));
+        }
+
+        tokens.push(token);
+    };
+    
+    Ok(tokens)
+}
+
 
 #[test]
 fn test_tokenize_0() {

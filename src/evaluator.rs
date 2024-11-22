@@ -1,4 +1,4 @@
-use crate::tokens::{BinaryOp, Function, Token, UnaryOp, Value};
+use crate::{app_context::Context, tokens::{BinaryOp, Function, Token, UnaryOp, Value}};
 
 #[derive(Debug)]
 pub enum EvalError {
@@ -6,18 +6,22 @@ pub enum EvalError {
     InvalidToken,
     MissingResult,
     NotImplemented,
+    UndefinedVariable,
 }
 
 
 
-pub fn evaluate(postfix_tokens: Vec<Token>) -> Result<f32, EvalError> {
+pub fn evaluate(postfix_tokens: Vec<Token>, context: &Context) -> Result<f32, EvalError> {
     let mut eval_stack = Vec::new();
 
     for token in postfix_tokens {
         match token {
             Token::Val(v) => match v {
                 Value::Scalar(x) => eval_stack.push(x),
-                Value::Var(_) => return Err(EvalError::NotImplemented),
+                Value::Var(name) => match context.var(&name) {
+                    Some(x) => eval_stack.push(x),
+                    None => return Err(EvalError::UndefinedVariable),
+                },
             }
             Token::Func(function) => match function {
                 Function::BinaryOp(op) => {
