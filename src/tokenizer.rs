@@ -1,5 +1,5 @@
 use std::{fmt::Display, str::Chars};
-use crate::tokens::{Function, Glyph, Token, Value, TOKEN};
+use crate::tokens::{BinaryOp, Function, Glyph, Token, UnaryOp, Value, TOKEN};
 
 macro_rules! symbols {
     () => {
@@ -80,19 +80,20 @@ impl <'a> Lexer<'a> for SymbolLexer {
 
         let c = reader.current_char().ok_or(TokenizerError::EmptyToken)?;
         let result = match c {
-            '+' => Ok(Token::Func(Function::Add)),
+            '+' => Ok(BinaryOp::Add.into()),
             '-' => {
+                // This is done to split between binary - and unary -.
                 match reader.prev_char {
-                    None | Some( '+' | '-' | '*' | '/' | '^' | ',' ) => Ok(Token::Func(Function::Neg)),
-                    _ => Ok(Token::Func(Function::Sub)),
+                    None | Some( '+' | '-' | '*' | '/' | '^' | ',' ) => Ok(UnaryOp::Neg.into()),
+                    _ => Ok(BinaryOp::Sub.into()),
                 }
             }
-            '*' => Ok(Token::Func(Function::Mul)),
-            '/' => Ok(Token::Func(Function::Div)),
-            '^' => Ok(Token::Func(Function::Pow)),
-            '(' => Ok(Token::Glyph(Glyph::LBracket)),
-            ')' => Ok(Token::Glyph(Glyph::RBracket)),
-            ',' => Ok(Token::Glyph(Glyph::Comma)),
+            '*' => Ok(BinaryOp::Mul.into()),
+            '/' => Ok(BinaryOp::Div.into()),
+            '^' => Ok(BinaryOp::Pow.into()),
+            '(' => Ok(Glyph::LBracket.into()),
+            ')' => Ok(Glyph::RBracket.into()),
+            ',' => Ok(Glyph::Comma.into()),
             _ => Err(TokenizerError::IncorrectCharacter(String::from(c)))
         };
         
@@ -117,7 +118,7 @@ impl <'a> Lexer<'a> for NumberLexer {
             }
             else if c == '.' {
                 if has_dot {
-                    return Ok(Token::Val(Value::Const(buffer.parse().unwrap())));
+                    return Ok(Value::Const(buffer.parse().unwrap()).into());
                 }
                 else {
                     buffer.push(c);
@@ -127,11 +128,11 @@ impl <'a> Lexer<'a> for NumberLexer {
                 
             }
             else {
-                return Ok(Token::Val(Value::Const(buffer.parse().unwrap())));
+                return Ok(Value::Const(buffer.parse().unwrap()).into());
             };
         }
 
-        Ok(Token::Val(Value::Const(buffer.parse().unwrap())))
+        Ok(Value::Const(buffer.parse().unwrap()).into())
     }
 }
 
@@ -149,14 +150,14 @@ impl <'a> Lexer<'a> for CharacterLexer {
                 reader.advance();
             }
             else if c == '(' {
-                return Ok(Token::Func(Function::NamedFunc(buffer)));
+                return Ok(Function::NamedFunc(buffer).into());
             }
             else {
-                return Ok(Token::Val(Value::Var(buffer)));
+                return Ok(Value::Var(buffer).into());
             }
         };
 
-        Ok(Token::Val(Value::Var(buffer)))
+        Ok(Value::Var(buffer).into())
     }
 }
 
@@ -195,15 +196,15 @@ pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, TokenizerError> {
 #[test]
 fn test_tokenize() {
     let input = "+";
-    let output = vec![TOKEN(Function::Add)];
+    let output = vec![TOKEN(BinaryOp::Add)];
     assert!(tokenize(input).unwrap() == output, "Single add failed");
 
     let input = ",+3 *sin(x)";
     let output: Vec<Token> = vec![
         TOKEN(Glyph::Comma),
-        TOKEN(Function::Add),
+        TOKEN(BinaryOp::Add),
         TOKEN(Value::Const(3.0)),
-        TOKEN(Function::Mul),
+        TOKEN(BinaryOp::Mul),
         TOKEN(Function::NamedFunc("sin".to_string())),
         TOKEN(Glyph::LBracket),
         TOKEN(Value::Var("x".to_string())),

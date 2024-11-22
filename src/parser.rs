@@ -1,7 +1,6 @@
 use std::fmt::Display;
 use crate::tokens::{Token, Glyph};
 
-
 #[derive(Debug)]
 pub struct ParserError(String);
 
@@ -24,11 +23,11 @@ fn validate_brackets(tokens: &Vec<Token>) -> bool {
                 _ => continue,
             }
         }
-
     }
 
     l_bracket_count == r_bracket_count
 }
+
 
 fn validate_operations(tokens: &Vec<Token>) -> bool {
     

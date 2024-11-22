@@ -1,4 +1,4 @@
-use crate::tokens::{Function, Token, Value};
+use crate::tokens::{BinaryOp, Function, Token, Value};
 
 #[derive(Debug)]
 pub enum EvalError {
@@ -17,22 +17,22 @@ pub fn evaluate(postfix_tokens: Vec<Token>) -> Result<f32, EvalError> {
                 Value::Var(_) => return Err(EvalError::NotImplemented),
             }
             Token::Func(f) => match f {
-                Function::Add => {
+                Function::BinaryOp(BinaryOp::Add) => {
                     let n1 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                     let n2 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                     eval_stack.push(n2 + n1);
                 },
-                Function::Sub => {
+                Function::BinaryOp(BinaryOp::Sub) => {
                     let n1 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                     let n2 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                     eval_stack.push(n2 - n1);
                 },
-                Function::Mul => {
+                Function::BinaryOp(BinaryOp::Mul) => {
                     let n1 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                     let n2 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                     eval_stack.push(n2 * n1);
                 },
-                Function::Div => {
+                Function::BinaryOp(BinaryOp::Div) => {
                     let n1 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                     let n2 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                     eval_stack.push(n2 / n1);

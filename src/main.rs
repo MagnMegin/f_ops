@@ -1,4 +1,3 @@
-use std::io;
 use tokenizer::tokenize;
 
 pub mod tokens;
