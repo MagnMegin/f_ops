@@ -1,11 +1,14 @@
-use crate::tokens::{BinaryOp, Function, Token, Value};
+use crate::tokens::{BinaryOp, Function, Token, UnaryOp, Value};
 
 #[derive(Debug)]
 pub enum EvalError {
     MissingArgument,
+    InvalidToken,
     MissingResult,
     NotImplemented,
 }
+
+
 
 pub fn evaluate(postfix_tokens: Vec<Token>) -> Result<f32, EvalError> {
     let mut eval_stack = Vec::new();
@@ -16,34 +19,29 @@ pub fn evaluate(postfix_tokens: Vec<Token>) -> Result<f32, EvalError> {
                 Value::Scalar(x) => eval_stack.push(x),
                 Value::Var(_) => return Err(EvalError::NotImplemented),
             }
-            Token::Func(f) => match f {
-                Function::BinaryOp(BinaryOp::Add) => {
+            Token::Func(function) => match function {
+                Function::BinaryOp(op) => {
                     let n1 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                     let n2 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
-                    eval_stack.push(n2 + n1);
-                },
-                Function::BinaryOp(BinaryOp::Sub) => {
-                    let n1 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
-                    let n2 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
-                    eval_stack.push(n2 - n1);
-                },
-                Function::BinaryOp(BinaryOp::Mul) => {
-                    let n1 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
-                    let n2 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
-                    eval_stack.push(n2 * n1);
-                },
-                Function::BinaryOp(BinaryOp::Div) => {
-                    let n1 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
-                    let n2 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
-                    eval_stack.push(n2 / n1);
-                },
-                _ => {
+                    match op {
+                        BinaryOp::Add => eval_stack.push(n2 + n1),
+                        BinaryOp::Sub => eval_stack.push(n2 - n1),
+                        BinaryOp::Mul => eval_stack.push(n2 * n1),
+                        BinaryOp::Div => eval_stack.push(n2 / n1),
+                        BinaryOp::Pow => eval_stack.push(n2.powf(n1)),
+                    }
+                }
+                Function::UnaryOp(op) => {
+                    let n = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
+                    match op {
+                        UnaryOp::Neg => eval_stack.push(-1.0 * n),
+                    }
+                }
+                Function::NamedFunc(_name) => {
                     return Err(EvalError::NotImplemented);
                 }
             }
-            _ => {
-                return Err(EvalError::NotImplemented);
-            } 
+            _ => return Err(EvalError::InvalidToken),
         }
     }
 
