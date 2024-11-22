@@ -24,6 +24,38 @@ impl Display for Token {
     }
 }
 
+impl Token {
+    pub fn variant_id(&self) -> i32 {
+        match self {
+            Token::Func(function) => {
+                match function {
+                    Function::Add => 0,
+                    Function::Sub => 1,
+                    Function::Mul => 2,
+                    Function::Div => 3,
+                    Function::Pow => 4,
+                    Function::Neg => 5,
+                    Function::NamedFunc(_) => 6,
+                }
+            },
+            Token::Val(value) => {
+                match value {
+                    Value::Const(_) => 7,
+                    Value::Var(_) => 8,
+                }
+
+            },
+            Token::Glyph(glyph) => {
+                match glyph {
+                    Glyph::LBracket => 9,
+                    Glyph::RBracket => 10,
+                    Glyph::Comma => 11,
+                }
+            },
+        }
+    }
+}
+
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Function {
