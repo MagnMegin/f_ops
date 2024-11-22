@@ -1,6 +1,107 @@
 use std::fmt::Display;
 
 
+#[derive(Debug, Clone)]
+pub struct ExpressionBuilder {
+    pub vec: Vec<Token>
+}
+
+impl Display for ExpressionBuilder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[")?;
+
+        let len = self.vec.len();
+        for token in &self.vec[0..len-1] {
+            write!(f, "{},", token)?;
+        }
+
+        if let Some(token) = self.vec.last() {
+            write!(f, "{}", token)?;
+        }
+
+        write!(f, "]")?;
+        
+        Ok(())
+    }
+}
+
+impl ExpressionBuilder {
+    pub fn start(mut self) -> Self {
+        self.vec.push(Token::Start);
+        self
+    }
+
+    pub fn end(mut self) -> Self {
+        self.vec.push(Token::End);
+        self
+    }
+
+    pub fn binop(mut self, op: BinaryOp) -> Self {
+        self.vec.push(Token::Func(Function::BinaryOp(op)));
+        self
+    }
+
+    pub fn add(mut self) -> Self {
+        self.vec.push(Token::Func(Function::BinaryOp(BinaryOp::Add)));
+        self
+    }
+
+    pub fn sub(mut self) -> Self {
+        self.vec.push(Token::Func(Function::BinaryOp(BinaryOp::Sub)));
+        self
+    }
+
+    pub fn mul(mut self) -> Self {
+        self.vec.push(Token::Func(Function::BinaryOp(BinaryOp::Mul)));
+        self
+    }
+
+    pub fn div(mut self) -> Self {
+        self.vec.push(Token::Func(Function::BinaryOp(BinaryOp::Div)));
+        self
+    }
+
+    pub fn pow(mut self) -> Self {
+        self.vec.push(Token::Func(Function::BinaryOp(BinaryOp::Pow)));
+        self
+    }
+
+    pub fn neg(mut self) -> Self {
+        self.vec.push(Token::Func(Function::UnaryOp(UnaryOp::Neg)));
+        self
+    }
+
+    pub fn func(mut self, func: &str) -> Self {
+        self.vec.push(Token::Func(Function::NamedFunc(func.to_string())));
+        self
+    }
+
+    pub fn sclar(mut self, scalar: f32) -> Self {
+        self.vec.push(Token::Val(Value::Scalar(scalar)));
+        self
+    }
+
+    pub fn var(mut self, var: &str) -> Self {
+        self.vec.push(Token::Val(Value::Var(var.to_string())));
+        self
+    }
+
+    pub fn lbracket(mut self) -> Self {
+        self.vec.push(Token::Glyph(Glyph::LBracket));
+        self
+    }
+
+    pub fn rbracket(mut self) -> Self {
+        self.vec.push(Token::Glyph(Glyph::RBracket));
+        self
+    }
+
+    pub fn comma(mut self) -> Self {
+        self.vec.push(Token::Glyph(Glyph::Comma));
+        self
+    }
+}
+
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
@@ -132,14 +233,14 @@ impl Into<Token> for UnaryOp {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Value {
-    Const(f32),
+    Scalar(f32),
     Var(String),
 }
 
 impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Const(x) => write!(f, "Const({})", x),
+            Self::Scalar(x) => write!(f, "Const({})", x),
             Self::Var(name) => write!(f, "Var({})", name),
         }
     }

@@ -1,5 +1,5 @@
 use std::fmt::Display;
-use crate::tokens::{Function, Token, BinaryOp, UnaryOp, Value, Glyph};
+use crate::tokens::{BinaryOp, Function, Glyph, Token, UnaryOp, Value};
 
 #[derive(Debug)]
 pub struct ParserError(String);
@@ -35,9 +35,13 @@ impl Ordering for Token {
 
 impl Ordering for Function {
     fn can_precede(&self, other: &Token) -> bool {
-        match other {
-            Token::Glyph(Glyph::LBracket) => true,
-            _ => false,
+        match self {
+            Self::BinaryOp(op) => op.can_precede(other),
+            Self::UnaryOp(op) => op.can_precede(other),
+            Self::NamedFunc(_) => match other {
+                Token::Glyph(Glyph::LBracket) => true,
+                _ => false,
+            }
         }
     }
 }
@@ -123,14 +127,65 @@ fn validate_brackets(tokens: &Vec<Token>) -> bool {
 }
 
 
-fn validate(tokens: &Vec<Token>) -> bool {
+pub fn validate(tokens: &Vec<Token>) -> bool {
     if !validate_brackets(tokens) {
         return false;
     }
     
-    for t in tokens.windows(2) {
-        t[0].can_precede(&t[1]);
+    for token in tokens.windows(2) {
+        if !token[0].can_precede(&token[1]) {
+            println!("{} cannot precede {}", token[0], token[1]);
+            return  false;
+        }
     }
 
-    todo!()
+    true
+}
+
+#[test]
+fn test_validate_0() {
+    let input = vec![
+        Token::Start,
+        Value::Var("a".to_string()).into(),
+        BinaryOp::Add.into(),
+        Value::Var("b".to_string()).into(),
+        BinaryOp::Mul.into(),
+        Function::NamedFunc("sin".to_string()).into(),
+        Glyph::LBracket.into(),
+        Value::Var("x".to_string()).into(),
+        Glyph::RBracket.into(),
+        Token::End,
+    ];
+    assert!(validate(&input) == true, "a + b * sin(x) was validated to false, expected: true.");
+}
+
+#[test]
+fn test_validate_1() {
+    let input = vec![
+        Token::Start,
+        Value::Scalar(11.0).into(),
+        BinaryOp::Sub.into(),
+        Value::Scalar(2.0).into(),
+        BinaryOp::Div.into(),
+        UnaryOp::Neg.into(),
+        Value::Var("e".to_string()).into(),
+        Token::End
+    ];
+    assert!(validate(&input) == true, "11-2/-e was validated to false, expected: true.");
+}
+
+#[test]
+fn test_validate_2() {
+    use crate::tokens::ExpressionBuilder;
+
+    let mut exp_builder = ExpressionBuilder{vec: Vec::new()};
+    exp_builder = exp_builder
+        .start()
+        .lbracket()
+        .lbracket()
+        .var("y")
+        .rbracket()
+        .end();
+
+    assert!(validate(&exp_builder.vec) == false, "((y) was validated to true, expected: false.");
 }

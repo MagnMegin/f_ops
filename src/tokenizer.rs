@@ -118,7 +118,7 @@ impl <'a> Lexer<'a> for NumberLexer {
             }
             else if c == '.' {
                 if has_dot {
-                    return Ok(Value::Const(buffer.parse().unwrap()).into());
+                    return Ok(Value::Scalar(buffer.parse().unwrap()).into());
                 }
                 else {
                     buffer.push(c);
@@ -128,11 +128,11 @@ impl <'a> Lexer<'a> for NumberLexer {
                 
             }
             else {
-                return Ok(Value::Const(buffer.parse().unwrap()).into());
+                return Ok(Value::Scalar(buffer.parse().unwrap()).into());
             };
         }
 
-        Ok(Value::Const(buffer.parse().unwrap()).into())
+        Ok(Value::Scalar(buffer.parse().unwrap()).into())
     }
 }
 
@@ -196,21 +196,26 @@ pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, TokenizerError> {
 
 
 #[test]
-fn test_tokenize() {
+fn test_tokenize_0() {
     let input = "+";
-    let output = vec![BinaryOp::Add.into()];
+    let output = vec![Token::Start, BinaryOp::Add.into(), Token::End];
     assert!(tokenize(input).unwrap() == output, "Single add failed");
+}
 
+#[test]
+fn test_tokenzie_1() {
     let input = ",+3 *sin(x)";
     let output: Vec<Token> = vec![
+        Token::Start,
         Glyph::Comma.into(),
         BinaryOp::Add.into(),
-        Value::Const(3.0).into(),
+        Value::Scalar(3.0).into(),
         BinaryOp::Mul.into(),
         Function::NamedFunc("sin".to_string()).into(),
         Glyph::LBracket.into(),
         Value::Var("x".to_string()).into(),
         Glyph::RBracket.into(),
+        Token::End,
     ];
     assert!(tokenize(input).unwrap() == output, ",+3 *sin(x) Failed");
 }

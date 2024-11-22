@@ -13,7 +13,7 @@ pub fn evaluate(postfix_tokens: Vec<Token>) -> Result<f32, EvalError> {
     for token in postfix_tokens {
         match token {
             Token::Val(v) => match v {
-                Value::Const(x) => eval_stack.push(x),
+                Value::Scalar(x) => eval_stack.push(x),
                 Value::Var(_) => return Err(EvalError::NotImplemented),
             }
             Token::Func(f) => match f {
