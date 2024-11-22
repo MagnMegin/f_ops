@@ -1,5 +1,5 @@
 use std::fmt::Display;
-use crate::tokens::{Token, Glyph};
+use crate::tokens::{Function, Glyph, Ordering, Token};
 
 #[derive(Debug)]
 pub struct ParserError(String);
@@ -29,7 +29,14 @@ fn validate_brackets(tokens: &Vec<Token>) -> bool {
 }
 
 
-fn validate_operations(tokens: &Vec<Token>) -> bool {
+fn validate(tokens: &Vec<Token>) -> bool {
+    if !validate_brackets(tokens) {
+        return false;
+    }
     
+    for t in tokens.windows(2) {
+        t[0].can_precede(&t[1]);
+    }
+
     todo!()
 }

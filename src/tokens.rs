@@ -1,19 +1,16 @@
 use std::fmt::Display;
 
-/// Shortcut for creating tokens. Is not constant.
-#[allow(non_snake_case)]
-pub fn TOKEN(sub_token: impl Into<Token>) -> Token {
-    sub_token.into()
-}
 
 pub trait Ordering {
-    fn can_precede(&self, other: Token) -> bool;
+    fn can_precede(&self, other: &Token) -> bool;
 }
 
 
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
+    Start,
+    End,
     Func(Function),
     Val(Value),
     Glyph(Glyph),
@@ -22,6 +19,8 @@ pub enum Token {
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Start => write!(f, "Start"),
+            Self::End => write!(f, "End"),
             Self::Func(function) => function.fmt(f),
             Self::Val(value) => value.fmt(f),
             Self::Glyph(glyph) => glyph.fmt(f),
@@ -30,11 +29,19 @@ impl Display for Token {
 }
 
 impl Ordering for Token {
-    fn can_precede(&self, other: Token) -> bool {
+    fn can_precede(&self, other: &Token) -> bool {
         match self {
             Token::Func(function) => function.can_precede(other),
             Token::Val(value) => value.can_precede(other),
             Token::Glyph(glyph) => glyph.can_precede(other),
+            Self::End => false,
+            Self::Start => match other {
+                Token::Val(_) => true,
+                Token::Func(Function::UnaryOp(_)) => true,
+                Token::Func(Function::NamedFunc(_)) => true,
+                Token::Glyph(Glyph::LBracket) => true,
+                _ => false, 
+            }
         }
     }
 }
@@ -65,7 +72,7 @@ impl Into<Token> for Function {
 }
 
 impl Ordering for Function {
-    fn can_precede(&self, other: Token) -> bool {
+    fn can_precede(&self, other: &Token) -> bool {
         match other {
             Token::Glyph(Glyph::LBracket) => true,
             _ => false,
@@ -127,7 +134,7 @@ impl Into<Token> for BinaryOp {
 }
 
 impl Ordering for BinaryOp {
-    fn can_precede(&self, other: Token) -> bool {
+    fn can_precede(&self, other: &Token) -> bool {
         match other {
             Token::Val(_) => true,
             Token::Func(Function::UnaryOp(_)) => true,
@@ -166,7 +173,7 @@ impl Into<Token> for UnaryOp {
 }
 
 impl Ordering for UnaryOp {
-    fn can_precede(&self, other: Token) -> bool {
+    fn can_precede(&self, other: &Token) -> bool {
         match other {
             Token::Val(_) => true,
             Token::Func(Function::UnaryOp(_)) => true,
@@ -201,11 +208,12 @@ impl Into<Token> for Value {
 }
 
 impl Ordering for Value {
-    fn can_precede(&self, other: Token) -> bool {
+    fn can_precede(&self, other: &Token) -> bool {
         match other {
             Token::Func(Function::BinaryOp(_)) => true,
             Token::Glyph(Glyph::Comma) => true,
             Token::Glyph(Glyph::RBracket) => true,
+            Token::End => true,
             _ => false,
         }
     }
@@ -237,8 +245,8 @@ impl Into<Token> for Glyph {
 }
 
 impl Ordering for Glyph {
-    fn can_precede(&self, other: Token) -> bool {
-        match *self {
+    fn can_precede(&self, other: &Token) -> bool {
+        match self {
             Glyph::LBracket | Glyph::Comma => {
                 match other {
                     Token::Func(Function::UnaryOp(_)) => true,
@@ -253,6 +261,7 @@ impl Ordering for Glyph {
                     Token::Func(Function::BinaryOp(_)) => true,
                     Token::Glyph(Glyph::Comma) => true,
                     Token::Glyph(Glyph::RBracket) => true,
+                    Token::End => true,
                     _ => false,
                 }
             }

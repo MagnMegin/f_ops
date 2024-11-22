@@ -1,5 +1,5 @@
 use std::{fmt::Display, str::Chars};
-use crate::tokens::{BinaryOp, Function, Glyph, Token, UnaryOp, Value, TOKEN};
+use crate::tokens::{BinaryOp, Function, Glyph, Token, UnaryOp, Value};
 
 macro_rules! symbols {
     () => {
@@ -164,7 +164,8 @@ impl <'a> Lexer<'a> for CharacterLexer {
 
 pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, TokenizerError> { 
     let mut reader = LexingReader::new(s);
-    let mut tokens = Vec::new();
+    let mut tokens = Vec::with_capacity(s.len() + 2);
+    tokens.push(Token::Start);
 
     while let Some(c) = reader.current_char() {
         let token: Token;
@@ -188,7 +189,8 @@ pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, TokenizerError> {
 
         tokens.push(token);
     };
-
+    
+    tokens.push(Token::End);
     Ok(tokens)
 }
 
@@ -196,19 +198,19 @@ pub fn tokenize<'a>(s: &'a str) -> Result<Vec<Token>, TokenizerError> {
 #[test]
 fn test_tokenize() {
     let input = "+";
-    let output = vec![TOKEN(BinaryOp::Add)];
+    let output = vec![BinaryOp::Add.into()];
     assert!(tokenize(input).unwrap() == output, "Single add failed");
 
     let input = ",+3 *sin(x)";
     let output: Vec<Token> = vec![
-        TOKEN(Glyph::Comma),
-        TOKEN(BinaryOp::Add),
-        TOKEN(Value::Const(3.0)),
-        TOKEN(BinaryOp::Mul),
-        TOKEN(Function::NamedFunc("sin".to_string())),
-        TOKEN(Glyph::LBracket),
-        TOKEN(Value::Var("x".to_string())),
-        TOKEN(Glyph::RBracket),
+        Glyph::Comma.into(),
+        BinaryOp::Add.into(),
+        Value::Const(3.0).into(),
+        BinaryOp::Mul.into(),
+        Function::NamedFunc("sin".to_string()).into(),
+        Glyph::LBracket.into(),
+        Value::Var("x".to_string()).into(),
+        Glyph::RBracket.into(),
     ];
     assert!(tokenize(input).unwrap() == output, ",+3 *sin(x) Failed");
 }
