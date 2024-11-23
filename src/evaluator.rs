@@ -22,8 +22,8 @@ impl Display for EvalError {
             Self::MissingResult => write!(f, "Missing Result"),
             Self::NotImplemented(token) => write!(f, "Not Implemented: {token}"),
             Self::IncorrectAssignment(token) => write!(f, "Cannot assign to {token}"),
-            Self::UndefinedVariable(name) => write!(f, "Undefined Variable: '{name}'"),
-            Self::UndfinedFunction(name) => write!(f, "Undefined Function: '{name}'"),
+            Self::UndefinedVariable(name) => write!(f, "Undefined Variable: \"{name}\""),
+            Self::UndfinedFunction(name) => write!(f, "Undefined Function: \"{name}\""),
         }
     }
 }
