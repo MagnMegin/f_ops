@@ -26,6 +26,14 @@ impl Display for ExpressionBuilder {
 }
 
 impl ExpressionBuilder {
+    pub fn new() -> Self {
+        ExpressionBuilder{vec: Vec::new()}
+    }
+
+    pub fn collect(self) -> Vec<Token> {
+        self.vec
+    }
+
     pub fn start(mut self) -> Self {
         self.vec.push(Token::Start);
         self
@@ -76,7 +84,7 @@ impl ExpressionBuilder {
         self
     }
 
-    pub fn sclar(mut self, scalar: f32) -> Self {
+    pub fn scalar(mut self, scalar: f32) -> Self {
         self.vec.push(Token::Val(Value::Scalar(scalar)));
         self
     }

@@ -142,6 +142,60 @@ pub fn validate(tokens: &Vec<Token>) -> bool {
     true
 }
 
+// Converts infix to postfix. Needs to be done before evaluation.
+pub fn shunting_yard(tokens: Vec<Token>) -> Vec<Token> {
+    let mut output: Vec<Token> = Vec::new();
+    let mut operations: Vec<Token> = Vec::new();
+
+    for token in tokens {
+        match token {
+            Token::Val(_) => output.push(token),
+            Token::Func(Function::NamedFunc(_)) => operations.push(token),
+            Token::Func(ref function) => 
+            loop {
+                match operations.last() {
+                    None | Some(Token::Glyph(_)) => {
+                        operations.push(token);
+                        break;
+                    }
+                    Some(Token::Func(prev_function)) if prev_function.presedence() <= function.presedence() => {
+                        operations.push(token);
+                        break;
+                    }
+                    Some(Token::Func(_)) => {
+                        let prev_function = operations.pop().unwrap();
+                        output.push(prev_function);
+                    }
+                    Some(_) => (),                   
+                }
+
+            },
+            Token::Glyph(Glyph::LBracket) => operations.push(token),
+            Token::Glyph(Glyph::RBracket) => 
+            while let Some(prev_token) = operations.last() {
+                if let Token::Glyph(Glyph::LBracket) = prev_token{
+                    operations.pop().unwrap();
+                    break;
+                }
+                let prev_token = operations.pop().unwrap();
+                output.push(prev_token);
+            }
+            Token::Glyph(Glyph::Comma) => 
+            while let Some(Token::Func(_)) = operations.last() {
+                let prev_function = operations.pop().unwrap();
+                output.push(prev_function);
+            }
+            Token::Start | Token::End => continue,
+        }
+    }
+
+    for op in operations.into_iter().rev() {
+        output.push(op);
+    }
+    
+    output
+}
+
 #[test]
 fn test_validate_0() {
     let input = vec![
@@ -178,14 +232,46 @@ fn test_validate_1() {
 fn test_validate_2() {
     use crate::tokens::ExpressionBuilder;
 
-    let mut exp_builder = ExpressionBuilder{vec: Vec::new()};
-    exp_builder = exp_builder
+    let exp_builder = ExpressionBuilder::new();
+    let vec = exp_builder
         .start()
         .lbracket()
         .lbracket()
         .var("y")
         .rbracket()
-        .end();
+        .end()
+        .collect();
 
-    assert!(validate(&exp_builder.vec) == false, "((y) was validated to true, expected: false.");
+    assert!(validate(&vec) == false, "((y) was validated to true, expected: false.");
+}
+
+#[test]
+fn tes_shunting_0() {
+    use crate::tokens::ExpressionBuilder;
+    let exp_builder = ExpressionBuilder::new();
+    let input = exp_builder
+        .start()
+        .scalar(1.0)
+        .add()
+        .func("sin")
+        .lbracket()
+        .scalar(3.14)
+        .mul()
+        .scalar(2.0)
+        .rbracket()
+        .end()
+        .collect();
+
+    let exp_builder = ExpressionBuilder::new();
+    let output = exp_builder
+        .scalar(1.0)
+        .scalar(3.14)
+        .scalar(2.0)
+        .mul()
+        .func("sin")
+        .add()
+        .collect();
+
+    
+    assert!(shunting_yard(input) == output)
 }

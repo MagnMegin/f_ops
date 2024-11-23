@@ -2,8 +2,8 @@ use std::io;
 
 use app_context::Context;
 use evaluator::evaluate;
-use tokenizer::{tokenize, tokenize_unpadded};
-use parser::validate;
+use tokenizer::tokenize;
+use parser::{shunting_yard, validate};
 
 pub mod tokens;
 pub mod tokenizer;
@@ -12,29 +12,29 @@ pub mod evaluator;
 pub mod app_context;
 
 fn main() {
-    let mut context = Context::new();
-
     loop {
+        let context = Context::new();
+        let stdin = io::stdin();
         let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-
-        input = input.trim().to_string();
-        if input.chars().next() == Some('/') {
-            input.remove(0);
-            let mut input = input.split(" ");
-            if input.next() == Some("set") {
-                let varname = input.next().unwrap();
-                let value = input.next().unwrap();
-                println!("set {} to {}", varname, value);
-                context.set_var(varname, value.parse().unwrap());
+        stdin.read_line(&mut input).unwrap();
+        
+        let mut tokens = match tokenize(input.trim()) {
+            Ok(val) => val,
+            Err(e) => {
+                println!("Tokenizer error: {}", e);
+                continue;
             }
-        }
-        else {
-            let tokens = tokenize_unpadded(&input).unwrap();
-            println!("{:?}", tokens);
-            let result = evaluate(tokens, &context).unwrap();
-            println!("{}", result)
+        };
+
+        if !validate(&tokens) {
+            println!("Parser error");
+            continue;
         }
 
+        tokens = shunting_yard(tokens);
+        match evaluate(tokens, &context) {
+            Ok(result) => println!("{}", result),
+            Err(e) => println!("Evaluation error: {e}"),
+        }
     }
 }
