@@ -13,12 +13,13 @@ pub enum EvalError {
 
 impl Display for EvalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "EvaluatorError -> ")?;
         match self {
             Self::MissingArgument => write!(f, "Missing Argument"),
             Self::InvalidToken => write!(f, "Invalid Token"),
             Self::MissingResult => write!(f, "Missing Result"),
-            Self::UndefinedVariable(name) => write!(f, "Underfined Variable: {name}"),
-            Self::UndfinedFunction(name) => write!(f, "Undefined Function: {name}"),
+            Self::UndefinedVariable(name) => write!(f, "Undefined Variable: '{name}'"),
+            Self::UndfinedFunction(name) => write!(f, "Undefined Function: '{name}'"),
         }
     }
 }

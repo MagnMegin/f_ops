@@ -12,29 +12,29 @@ pub mod evaluator;
 pub mod app_context;
 
 fn main() {
+    let context = Context::new();
+    let stdin = io::stdin();
     loop {
-        let context = Context::new();
-        let stdin = io::stdin();
         let mut input = String::new();
         stdin.read_line(&mut input).unwrap();
         
         let mut tokens = match tokenize(input.trim()) {
             Ok(val) => val,
             Err(e) => {
-                println!("Tokenizer error: {}", e);
+                println!("{e}");
                 continue;
             }
         };
 
-        if !validate(&tokens) {
-            println!("Parser error");
+        if let Err(e) = validate(&tokens) {
+            println!("{e}");
             continue;
         }
 
         tokens = shunting_yard(tokens);
         match evaluate(tokens, &context) {
             Ok(result) => println!("{}", result),
-            Err(e) => println!("Evaluation error: {e}"),
+            Err(e) => println!("{e}"),
         }
     }
 }

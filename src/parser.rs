@@ -1,12 +1,19 @@
 use std::fmt::Display;
 use crate::tokens::{BinaryOp, Function, Glyph, Token, UnaryOp, Value};
 
-#[derive(Debug)]
-pub struct ParserError(String);
+#[derive(Debug, PartialEq, Clone)]
+pub enum ParserError {
+    UnevenBrackets,
+    OrderError(Token, Token),
+}
 
 impl Display for ParserError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Parser error: {}", self.0)
+        write!(f, "ParseError -> ")?;
+        match self {
+            Self::UnevenBrackets => write!(f, "Uneven Brackets"),
+            Self::OrderError(t1, t2) => write!(f, "{t1} cannot precede {t2}"),
+        }
     }
 }
 
@@ -109,7 +116,7 @@ impl Ordering for Glyph {
 
 
 
-fn validate_brackets(tokens: &Vec<Token>) -> bool {
+fn validate_brackets(tokens: &Vec<Token>) -> Result<(), ParserError> {
     let mut l_bracket_count = 0;
     let mut r_bracket_count = 0;
     
@@ -123,23 +130,24 @@ fn validate_brackets(tokens: &Vec<Token>) -> bool {
         }
     }
 
-    l_bracket_count == r_bracket_count
+    if l_bracket_count == r_bracket_count {
+        return Ok(());
+    }
+    Err(ParserError::UnevenBrackets)
 }
 
 
-pub fn validate(tokens: &Vec<Token>) -> bool {
-    if !validate_brackets(tokens) {
-        return false;
-    }
+pub fn validate(tokens: &Vec<Token>) -> Result<(), ParserError> {
+    validate_brackets(tokens)?;
     
     for token in tokens.windows(2) {
         if !token[0].can_precede(&token[1]) {
             println!("{} cannot precede {}", token[0], token[1]);
-            return  false;
+            return  Err(ParserError::OrderError(token[0].clone(), token[1].clone()));
         }
-    }
+    };
 
-    true
+    Ok(())
 }
 
 // Converts infix to postfix. Needs to be done before evaluation.
@@ -210,7 +218,7 @@ fn test_validate_0() {
         Glyph::RBracket.into(),
         Token::End,
     ];
-    assert!(validate(&input) == true, "a + b * sin(x) was validated to false, expected: true.");
+    assert!(validate(&input).is_ok(), "a + b * sin(x) was validated to false, expected: true.");
 }
 
 #[test]
@@ -225,7 +233,7 @@ fn test_validate_1() {
         Value::Var("e".to_string()).into(),
         Token::End
     ];
-    assert!(validate(&input) == true, "11-2/-e was validated to false, expected: true.");
+    assert!(validate(&input).is_ok(), "11-2/-e was validated to false, expected: true.");
 }
 
 #[test]
@@ -242,7 +250,7 @@ fn test_validate_2() {
         .end()
         .collect();
 
-    assert!(validate(&vec) == false, "((y) was validated to true, expected: false.");
+    assert!(validate(&vec).is_err(), "((y) was validated to true, expected: false.");
 }
 
 #[test]

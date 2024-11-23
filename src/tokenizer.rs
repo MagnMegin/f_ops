@@ -17,11 +17,11 @@ pub enum TokenizerError {
 
 impl Display for TokenizerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let message = match self {
-            Self::EmptyToken => String::from("Empty token"),
-            Self::IncorrectCharacter(c) => String::from("Incorrect character: ") + c,  
-        };
-        write!(f, "TokenizerError -> {}", message)
+        write!(f, "TokenizerError -> ")?;
+        match self {
+            Self::EmptyToken => write!(f, "Empty token"),
+            Self::IncorrectCharacter(c) => write!(f, "Incorrect character: '{c}'"),  
+        }
     }
 }
 
