@@ -49,6 +49,11 @@ impl ExpressionBuilder {
         self
     }
 
+    pub fn assign(mut self) -> Self {
+        self.vec.push(Token::Func(Function::BinaryOp(BinaryOp::Assign)));
+        self
+    }
+
     pub fn add(mut self) -> Self {
         self.vec.push(Token::Func(Function::BinaryOp(BinaryOp::Add)));
         self
@@ -163,6 +168,7 @@ impl Function {
         match self {
             Self::BinaryOp(op) => {
                 match op {
+                    BinaryOp::Assign => -1,
                     BinaryOp::Add => 0,
                     BinaryOp::Sub => 0,
                     BinaryOp::Mul => 1,
@@ -180,6 +186,7 @@ impl Function {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum BinaryOp {
+    Assign,
     Add,
     Sub,
     Mul,
@@ -190,11 +197,12 @@ pub enum BinaryOp {
 impl Display for BinaryOp {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Assign => write!(f, "Assign"),
             Self::Add => write!(f, "Add"),
             Self::Sub => write!(f, "Sub"),
             Self::Mul => write!(f, "Mul"),
             Self::Div => write!(f, "Div"),
-            Self::Pow => write!(f, "Pow"), 
+            Self::Pow => write!(f, "Pow"),
         }
     }
 }

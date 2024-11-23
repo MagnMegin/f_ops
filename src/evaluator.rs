@@ -7,6 +7,7 @@ pub enum EvalError {
     MissingArgument,
     InvalidToken,
     MissingResult,
+    IncorrectAssignment(Token),
     UndefinedVariable(String),
     UndfinedFunction(String),
 }
@@ -18,6 +19,7 @@ impl Display for EvalError {
             Self::MissingArgument => write!(f, "Missing Argument"),
             Self::InvalidToken => write!(f, "Invalid Token"),
             Self::MissingResult => write!(f, "Missing Result"),
+            Self::IncorrectAssignment(token) => write!(f, "Cannot assign to {token}"),
             Self::UndefinedVariable(name) => write!(f, "Undefined Variable: '{name}'"),
             Self::UndfinedFunction(name) => write!(f, "Undefined Function: '{name}'"),
         }
@@ -43,6 +45,7 @@ pub fn evaluate(postfix_tokens: Vec<Token>, context: &Context) -> Result<f32, Ev
                     let n1 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                     let n2 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                     match op {
+                        BinaryOp::Assign => continue,
                         BinaryOp::Add => eval_stack.push(n2 + n1),
                         BinaryOp::Sub => eval_stack.push(n2 - n1),
                         BinaryOp::Mul => eval_stack.push(n2 * n1),
