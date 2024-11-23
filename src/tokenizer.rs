@@ -4,7 +4,7 @@ use crate::tokens::{BinaryOp, Function, Glyph, Token, UnaryOp, Value};
 macro_rules! symbols {
     () => {
         '+' | '-' | '*' | '/' | '^' |
-        '(' | ')' | ','
+        '(' | ')' | ',' | '=' 
     };
 }
 
@@ -19,8 +19,8 @@ impl Display for TokenizerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "TokenizerError -> ")?;
         match self {
-            Self::EmptyToken => write!(f, "Empty token"),
-            Self::IncorrectCharacter(c) => write!(f, "Incorrect character: '{c}'"),  
+            Self::EmptyToken => write!(f, "Empty Token"),
+            Self::IncorrectCharacter(c) => write!(f, "Incorrect Character: \"{c}\""),
         }
     }
 }
@@ -82,7 +82,7 @@ impl <'a> Lexer<'a> for SymbolLexer {
         let result = match c {
             '+' => Ok(BinaryOp::Add.into()),
             '-' => {
-                // This is done to split between binary - and unary -.
+                // This is done to differentiate between binary "-" and unary "-"
                 match reader.prev_char {
                     None | Some( '+' | '-' | '*' | '/' | '^' | ',' ) => Ok(UnaryOp::Neg.into()),
                     _ => Ok(BinaryOp::Sub.into()),
@@ -91,6 +91,7 @@ impl <'a> Lexer<'a> for SymbolLexer {
             '*' => Ok(BinaryOp::Mul.into()),
             '/' => Ok(BinaryOp::Div.into()),
             '^' => Ok(BinaryOp::Pow.into()),
+            '=' => Ok(Function::Assign.into()),
             '(' => Ok(Glyph::LBracket.into()),
             ')' => Ok(Glyph::RBracket.into()),
             ',' => Ok(Glyph::Comma.into()),

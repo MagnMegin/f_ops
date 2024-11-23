@@ -50,7 +50,7 @@ impl ExpressionBuilder {
     }
 
     pub fn assign(mut self) -> Self {
-        self.vec.push(Token::Func(Function::BinaryOp(BinaryOp::Assign)));
+        self.vec.push(Token::Func(Function::Assign));
         self
     }
 
@@ -142,6 +142,7 @@ impl Display for Token {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Function {
+    Assign,
     BinaryOp(BinaryOp),
     UnaryOp(UnaryOp),
     NamedFunc(String),
@@ -150,6 +151,7 @@ pub enum Function {
 impl Display for Function {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Assign => write!(f, "Assign"),
             Self::BinaryOp(op) => op.fmt(f),
             Self::UnaryOp(op) => op.fmt(f),
             Self::NamedFunc(name) => write!(f, "NamedFunc({})", name) 
@@ -166,9 +168,9 @@ impl Into<Token> for Function {
 impl Function {
     pub const fn presedence(&self) -> i32 {
         match self {
+            Self::Assign => -1,
             Self::BinaryOp(op) => {
                 match op {
-                    BinaryOp::Assign => -1,
                     BinaryOp::Add => 0,
                     BinaryOp::Sub => 0,
                     BinaryOp::Mul => 1,
@@ -186,7 +188,6 @@ impl Function {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum BinaryOp {
-    Assign,
     Add,
     Sub,
     Mul,
@@ -197,7 +198,6 @@ pub enum BinaryOp {
 impl Display for BinaryOp {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Assign => write!(f, "Assign"),
             Self::Add => write!(f, "Add"),
             Self::Sub => write!(f, "Sub"),
             Self::Mul => write!(f, "Mul"),

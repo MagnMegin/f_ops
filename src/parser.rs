@@ -43,6 +43,13 @@ impl Ordering for Token {
 impl Ordering for Function {
     fn can_precede(&self, other: &Token) -> bool {
         match self {
+            Self::Assign => match other {
+                Token::Val(_) => true,
+                Token::Func(Function::UnaryOp(_)) => true,
+                Token::Func(Function::NamedFunc(_)) => true,
+                Token::Glyph(Glyph::LBracket) => true,
+                _ => false,                
+            }
             Self::BinaryOp(op) => op.can_precede(other),
             Self::UnaryOp(op) => op.can_precede(other),
             Self::NamedFunc(_) => match other {
@@ -80,6 +87,7 @@ impl Ordering for UnaryOp {
 impl Ordering for Value {
     fn can_precede(&self, other: &Token) -> bool {
         match other {
+            Token::Func(Function::Assign) => true,
             Token::Func(Function::BinaryOp(_)) => true,
             Token::Glyph(Glyph::Comma) => true,
             Token::Glyph(Glyph::RBracket) => true,
