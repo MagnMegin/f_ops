@@ -4,6 +4,7 @@ use crate::tokens::{BinaryOp, Function, Glyph, Token, UnaryOp, Value};
 #[derive(Debug, PartialEq, Clone)]
 pub enum ParserError {
     UnevenBrackets,
+    IncorrectAssign,
     OrderError(Token, Token),
 }
 
@@ -12,6 +13,7 @@ impl Display for ParserError {
         write!(f, "ParseError -> ")?;
         match self {
             Self::UnevenBrackets => write!(f, "Uneven Brackets"),
+            Self::IncorrectAssign => write!(f, "Incorrect Assign"),
             Self::OrderError(t1, t2) => write!(f, "{t1} cannot precede {t2}"),
         }
     }
@@ -148,10 +150,12 @@ fn validate_brackets(tokens: &Vec<Token>) -> Result<(), ParserError> {
 pub fn validate(tokens: &Vec<Token>) -> Result<(), ParserError> {
     validate_brackets(tokens)?;
     
-    for token in tokens.windows(2) {
+    for (count, token) in tokens.windows(2).enumerate() {
         if !token[0].can_precede(&token[1]) {
-            println!("{} cannot precede {}", token[0], token[1]);
-            return  Err(ParserError::OrderError(token[0].clone(), token[1].clone()));
+            return Err(ParserError::OrderError(token[0].clone(), token[1].clone()));
+        }
+        if token[0] == Token::Func(Function::Assign) && count != 2 {
+            return Err(ParserError::IncorrectAssign);
         }
     };
 

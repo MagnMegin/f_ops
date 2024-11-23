@@ -84,7 +84,7 @@ impl <'a> Lexer<'a> for SymbolLexer {
             '-' => {
                 // This is done to differentiate between binary "-" and unary "-"
                 match reader.prev_char {
-                    None | Some( '+' | '-' | '*' | '/' | '^' | ',' ) => Ok(UnaryOp::Neg.into()),
+                    None | Some( '(' | '+' | '-' | '*' | '/' | '^' | ',' ) => Ok(UnaryOp::Neg.into()),
                     _ => Ok(BinaryOp::Sub.into()),
                 }
             }

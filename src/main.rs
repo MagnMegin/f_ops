@@ -1,7 +1,7 @@
 use std::io;
 
 use app_context::Context;
-use evaluator::evaluate;
+use evaluator::{evaluate, EvalOutput};
 use tokenizer::tokenize;
 use parser::{shunting_yard, validate};
 
@@ -12,7 +12,7 @@ pub mod evaluator;
 pub mod app_context;
 
 fn main() {
-    let context = Context::new();
+    let mut context = Context::new();
     let stdin = io::stdin();
     loop {
         let mut input = String::new();
@@ -32,8 +32,11 @@ fn main() {
         }
 
         tokens = shunting_yard(tokens);
-        match evaluate(tokens, &context) {
-            Ok(result) => println!("{}", result),
+        match evaluate(tokens, &mut context) {
+            Ok(result) => match result {
+                EvalOutput::Assignment(var, val) => println!("Assigned value, {val}, to variable {var}"),
+                EvalOutput::Value(value) => println!("{value}"),
+            },
             Err(e) => println!("{e}"),
         }
     }

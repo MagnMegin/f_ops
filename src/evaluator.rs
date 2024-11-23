@@ -29,42 +29,87 @@ impl Display for EvalError {
 }
 
 
+#[derive(Debug)]
+pub enum EvalOutput {
+    Value(f32),
+    Assignment(String, f32),
+}
 
-pub fn evaluate(postfix_tokens: Vec<Token>, context: &Context) -> Result<f32, EvalError> {
+
+impl Value {
+    pub fn collect(self, context: &Context) -> Result<f32, EvalError> {
+        match self {
+            Value::Scalar(x) => Ok(x),
+            Value::Var(name) => match context.var(&name) {
+                Some(x) => Ok(x),
+                None => Err(EvalError::UndefinedVariable(name.clone())),
+            },
+        }
+    }
+
+    pub fn add(self, other: Value, context: &Context) -> Result<Value, EvalError> {
+        Ok(Value::Scalar(self.collect(context)? + other.collect(context)?))
+    }
+
+    pub fn sub(self, other: Value, context: &Context) -> Result<Value, EvalError> {
+        Ok(Value::Scalar(self.collect(context)? - other.collect(context)?))
+    }
+
+    pub fn mul(self, other: Value, context: &Context) -> Result<Value, EvalError> {
+        Ok(Value::Scalar(self.collect(context)? * other.collect(context)?))
+    }
+
+    pub fn div(self, other: Value, context: &Context) -> Result<Value, EvalError> {
+        Ok(Value::Scalar(self.collect(context)? / other.collect(context)?))
+    }
+
+    pub fn pow(self, other: Value, context: &Context) -> Result<Value, EvalError> {
+        Ok(Value::Scalar(self.collect(context)?.powf(other.collect(context)?)))
+    }
+
+    pub fn neg(self, context: &Context) -> Result<Value, EvalError> {
+        Ok(Value::Scalar(-1.0 * self.collect(context)?))
+    }
+}
+
+
+pub fn evaluate(postfix_tokens: Vec<Token>, context: &mut Context) -> Result<EvalOutput, EvalError>{
     let mut eval_stack = Vec::new();
 
     for token in postfix_tokens {
         match token {
-            Token::Val(v) => match v {
-                Value::Scalar(x) => eval_stack.push(x),
-                Value::Var(name) => match context.var(&name) {
-                    Some(x) => eval_stack.push(x),
-                    None => return Err(EvalError::UndefinedVariable(name.clone())),
-                },
-            }
+            Token::Val(value) => eval_stack.push(value),
             Token::Func(function) => match function {
-                Function::Assign => return Err(EvalError::NotImplemented(Function::Assign.into())),
+                Function::Assign => {
+                    let n1 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
+                    let n2 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
+                    if let Value::Var(name) = n2 {
+                        let value = n1.collect(&context)?;
+                        context.set_var(&name, value);
+                        return Ok(EvalOutput::Assignment(name.clone(), value));
+                    }
+                }
                 Function::BinaryOp(op) => {
                     let n1 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                     let n2 = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                     match op {
-                        BinaryOp::Add => eval_stack.push(n2 + n1),
-                        BinaryOp::Sub => eval_stack.push(n2 - n1),
-                        BinaryOp::Mul => eval_stack.push(n2 * n1),
-                        BinaryOp::Div => eval_stack.push(n2 / n1),
-                        BinaryOp::Pow => eval_stack.push(n2.powf(n1)),
+                        BinaryOp::Add => eval_stack.push(n2.add(n1, &context)?),
+                        BinaryOp::Sub => eval_stack.push(n2.sub(n1, &context)?),
+                        BinaryOp::Mul => eval_stack.push(n2.mul(n1, &context)?),
+                        BinaryOp::Div => eval_stack.push(n2.div(n1, &context)?),
+                        BinaryOp::Pow => eval_stack.push(n2.pow(n1, &context)?),
                     }
                 }
                 Function::UnaryOp(op) => {
                     let n = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
                     match op {
-                        UnaryOp::Neg => eval_stack.push(-1.0 * n),
+                        UnaryOp::Neg => eval_stack.push(n.neg(&context)?),
                     }
                 }
                 Function::NamedFunc(name) => {
                     let n = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
-                    match context.call_func(&name, n) {
-                        Some(val) => eval_stack.push(val),
+                    match context.call_func(&name, n.collect(&context)?) {
+                        Some(n) => eval_stack.push(Value::Scalar(n)),
                         None => return Err(EvalError::UndfinedFunction(name.clone())),
                     }
                 }
@@ -73,5 +118,10 @@ pub fn evaluate(postfix_tokens: Vec<Token>, context: &Context) -> Result<f32, Ev
         }
     }
 
-    return Ok(eval_stack.pop().ok_or(EvalError::MissingResult)?);
+    if let Some(val) = eval_stack.pop() {
+        Ok(EvalOutput::Value(val.collect(&context)?))
+    }
+    else {
+        Err(EvalError::MissingResult)
+    }
 }
