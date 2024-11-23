@@ -7,6 +7,7 @@ pub enum EvalError {
     MissingResult,
     NotImplemented,
     UndefinedVariable,
+    UndfinedFunction,
 }
 
 
@@ -41,8 +42,12 @@ pub fn evaluate(postfix_tokens: Vec<Token>, context: &Context) -> Result<f32, Ev
                         UnaryOp::Neg => eval_stack.push(-1.0 * n),
                     }
                 }
-                Function::NamedFunc(_name) => {
-                    return Err(EvalError::NotImplemented);
+                Function::NamedFunc(name) => {
+                    let n = eval_stack.pop().ok_or(EvalError::MissingArgument)?;
+                    match context.call_func(&name, n) {
+                        Some(val) => eval_stack.push(val),
+                        None => return Err(EvalError::UndfinedFunction),
+                    }
                 }
             }
             _ => return Err(EvalError::InvalidToken),
